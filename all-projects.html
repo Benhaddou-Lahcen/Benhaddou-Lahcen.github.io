@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Projects | Lahcen Benhaddou</title>
+    <link rel="stylesheet" href="assets/css/styles-clean.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="animated-bg">
+        <div class="wave wave1"></div>
+        <div class="wave wave2"></div>
+        <div class="wave wave3"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="nav-brand">LAHCEN BENHADDOU</a>
+            <ul class="nav-menu">
+                <li><a href="index.html#home" class="nav-link">Home</a></li>
+                <li><a href="index.html#blog" class="nav-link">Blog</a></li>
+                <li><a href="index.html#about" class="nav-link">About</a></li>
+                <li><a href="index.html#experience" class="nav-link">Experience</a></li>
+                <li><a href="index.html#projects" class="nav-link active">Projects</a></li>
+                <li><a href="index.html#contact" class="nav-link">Contact</a></li>
+            </ul>
+            <div class="nav-actions">
+                <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">
+                    <i class="fas fa-sun"></i>
+                    <i class="fas fa-moon"></i>
+                </button>
+                <div class="hamburger">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Page Header -->
+    <section class="page-header">
+        <div class="container">
+            <a href="index.html#projects" class="back-link">
+                <i class="fas fa-arrow-left"></i> Back to Home
+            </a>
+            <h1 class="page-title">All Projects</h1>
+            <p class="page-subtitle">Complete portfolio of my software engineering projects</p>
+        </div>
+    </section>
+
+    <!-- All Projects -->
+    <section class="all-posts-section">
+        <div class="container">
+            <div class="posts-grid">
+                <div class="project-card" data-project="api-integration">
+                    <div class="project-header">
+                        <div class="project-icon">
+                            <i class="fas fa-plug"></i>
+                        </div>
+                        <span class="project-status status-progress">In Progress</span>
+                    </div>
+                    <h3>API Integration Platform</h3>
+                    <p>
+                        Building a platform to automate and synchronize data flows between multiple SaaS applications 
+                        with OAuth2 security and real-time monitoring capabilities.
+                    </p>
+                    <div class="project-tech-tags">
+                        <span>Spring Boot</span>
+                        <span>Kafka</span>
+                        <span>PostgreSQL</span>
+                        <span>Redis</span>
+                        <span>OAuth2</span>
+                        <span>Docker</span>
+                    </div>
+                    <button class="btn-project-details">
+                        View Details <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+
+                <div class="project-card" data-project="rentable">
+                    <div class="project-header">
+                        <div class="project-icon">
+                            <i class="fas fa-store"></i>
+                        </div>
+                        <span class="project-status status-live">Live</span>
+                    </div>
+                    <h3>Rentable Platform - P2P Marketplace</h3>
+                    <p>
+                        Peer-to-peer marketplace application for renting or listing goods, built with microservices 
+                        architecture, Stripe payments, and real-time messaging.
+                    </p>
+                    <div class="project-tech-tags">
+                        <span>Express.js</span>
+                        <span>React</span>
+                        <span>MongoDB</span>
+                        <span>Stripe API</span>
+                        <span>MinIO</span>
+                        <span>Nodemailer</span>
+                    </div>
+                    <button class="btn-project-details">
+                        View Details <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+
+                <div class="project-card" data-project="chat">
+                    <div class="project-header">
+                        <div class="project-icon">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                        <span class="project-status status-live">Live</span>
+                    </div>
+                    <h3>Live Chat Application</h3>
+                    <p>
+                        Real-time chat application using Spring Boot, Spring Cloud, Kafka, WebSockets, and Redis. 
+                        Supports 10,000+ concurrent connections with sub-50ms latency.
+                    </p>
+                    <div class="project-tech-tags">
+                        <span>Spring Boot</span>
+                        <span>Kafka</span>
+                        <span>WebSockets</span>
+                        <span>Redis</span>
+                        <span>React</span>
+                        <span>Docker</span>
+                    </div>
+                    <button class="btn-project-details">
+                        View Details <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+
+                <div class="project-card" data-project="events">
+                    <div class="project-header">
+                        <div class="project-icon">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                        <span class="project-status status-live">Production</span>
+                    </div>
+                    <h3>Academic Event Management System</h3>
+                    <p>
+                        Full-stack development of a microservices-based web platform for managing academic events 
+                        at EHTP. Serves 2,000+ active users with automated certificate generation.
+                    </p>
+                    <div class="project-tech-tags">
+                        <span>Spring Boot</span>
+                        <span>React</span>
+                        <span>PostgreSQL</span>
+                        <span>Docker</span>
+                        <span>Microservices</span>
+                    </div>
+                    <button class="btn-project-details">
+                        View Details <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-info">
+                    <h3>LAHCEN BENHADDOU</h3>
+                    <p>Software Engineer | Backend & Distributed Systems</p>
+                </div>
+                <div class="footer-links">
+                    <a href="https://github.com/Benhaddou-Lahcen" target="_blank" aria-label="GitHub">
+                        <i class="fab fa-github"></i>
+                    </a>
+                    <a href="https://leetcode.com/lahcenbenhaddou" target="_blank" aria-label="LeetCode">
+                        <i class="fas fa-code"></i>
+                    </a>
+                    <a href="https://www.linkedin.com/in/lahcen-benhaddou" target="_blank" aria-label="LinkedIn">
+                        <i class="fab fa-linkedin"></i>
+                    </a>
+                    <a href="mailto:lahcenbenhaddou282@gmail.com" aria-label="Email">
+                        <i class="fas fa-envelope"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Lahcen Benhaddou. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Project Modal -->
+    <div id="projectModal" class="modal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <button class="modal-close">&times;</button>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <script src="assets/js/main-clean.js"></script>
+</body>
+</html>

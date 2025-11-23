@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MySQL Replication Automation with Shell & Ansible | Lahcen Benhaddou</title>
+    <link rel="stylesheet" href="../assets/css/styles-clean.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="animated-bg">
+        <div class="wave wave1"></div>
+        <div class="wave wave2"></div>
+        <div class="wave wave3"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="../index.html" class="nav-brand">LAHCEN BENHADDOU</a>
+            <ul class="nav-menu">
+                <li><a href="../index.html#home" class="nav-link">Home</a></li>
+                <li><a href="../index.html#blog" class="nav-link active">Blog</a></li>
+                <li><a href="../index.html#about" class="nav-link">About</a></li>
+                <li><a href="../index.html#experience" class="nav-link">Experience</a></li>
+                <li><a href="../index.html#projects" class="nav-link">Projects</a></li>
+                <li><a href="../index.html#contact" class="nav-link">Contact</a></li>
+            </ul>
+            <div class="nav-actions">
+                <button id="themeToggle" class="theme-toggle">
+                    <i class="fas fa-sun"></i>
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Blog Article -->
+    <article class="blog-article">
+    <div class="container">
+        <div class="article-header">
+            <a href="../all-posts.html" class="back-link">
+                <i class="fas fa-arrow-left"></i> Back to All Posts
+            </a>
+
+            <div class="article-meta">
+                <span class="article-category"><i class="fas fa-database"></i> MySQL</span>
+                <span class="article-date"><i class="far fa-calendar"></i> Jan 6, 2024</span>
+                <span class="article-read-time"><i class="far fa-clock"></i> 10 min read</span>
+            </div>
+
+            <h1 class="article-title">MySQL Replication Automation with Shell & Ansible</h1>
+
+            <!-- ▶️ VIDEO INSERTED HERE -->
+            <div class="article-video">
+                <video width="100%" controls>
+                    <source src="../assets/blog-videos/demo.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+            <!-- END VIDEO -->
+        </div>
+        
+
+        <div class="article-content">
+
+            <div class="article-intro">
+                <p>
+                    The <strong>MySQL Replication Application</strong> simplifies the deployment of both 
+                    unidirectional and bidirectional replication for MySQL databases.  
+                    It relies on a main installation and configuration script called 
+                    <code>projet.sh</code>, as well as an auxiliary <code>sql.sh</code> file 
+                    distributed through Ansible to streamline replication operations.
+                </p>
+            </div>
+            <!-- GitHub repository link added -->
+<div class="project-repo">
+<h3><i class="fab fa-github"></i> Project Repository</h3>
+<p>
+The full project, including <code>projet.sh</code>, <code>sql.sh</code> and the detailed report, is available on GitHub:
+</p>
+<p>
+<a href="https://github.com/Benhaddou-Lahcen/MySQL-replication" target="_blank" rel="noopener">https://github.com/Benhaddou-Lahcen/MySQL-replication</a>
+</p>
+</div>
+
+            <h2><i class="fas fa-cogs"></i> Installation and Configuration</h2>
+
+            <h3><i class="fas fa-folder-open"></i> 1. Adjust MySQL Directory Path</h3>
+            <p>
+                Before running the <code>projet.sh</code> script located in the <strong>mysql</strong> directory, you must:
+            </p>
+
+            <ol>
+                <li>
+                    Update the MySQL installation directory by editing the variable:
+                    <div class="code-block">
+                        <pre><code>projet_directory="/path/to/mysql"</code></pre>
+                    </div>
+                </li>
+
+                <li>
+                    Ensure that each machine participating in the replication uses the 
+                    <strong>same Linux username</strong>.
+                </li>
+
+                <li>
+                    Update the <code>user</code> variable inside <code>projet.sh</code>:
+                    <div class="code-block">
+                        <pre><code>user="your_username"</code></pre>
+                    </div>
+                </li>
+            </ol>
+
+            <h3><i class="fas fa-file-code"></i> 2. The <code>sql.sh</code> Management Script</h3>
+            <p>
+                Each replication node will receive the <code>sql.sh</code> file (usually placed in <code>/home</code>) 
+                to help automate replication operations.
+            </p>
+            <p>
+                <strong>Note:</strong> All machines must have SSH enabled to ensure communication 
+                between replication nodes.
+            </p>
+
+            <h2><i class="fas fa-play"></i> Usage</h2>
+
+            <h3><i class="fas fa-info-circle"></i> Required Information</h3>
+            <p>You will need the following details to configure replication:</p>
+            <ul>
+                <li>Database name</li>
+                <li>IP addresses of all replication machines</li>
+                <li>Total number of machines</li>
+            </ul>
+
+            <h3><i class="fas fa-download"></i> 1. MySQL Installation (Optional)</h3>
+            <p>
+                If MySQL is not yet installed on the participating machines, the script includes 
+                an automatic installation option.
+            </p>
+
+            <h3><i class="fas fa-sync"></i> 2. Replication Configuration</h3>
+            <ol>
+                <li>Run <code>projet.sh</code> on the master (configuration machine).</li>
+                <li>Choose between:
+                    <ul>
+                        <li><strong>Unidirectional replication</strong></li>
+                        <li><strong>Bidirectional replication</strong></li>
+                    </ul>
+                </li>
+                <li>Provide:
+                    <ul>
+                        <li>Database name</li>
+                        <li>IP addresses of all participating machines</li>
+                        <li>The number of nodes</li>
+                    </ul>
+                </li>
+            </ol>
+
+            <h3><i class="fas fa-wrench"></i> 3. Environment Preparation (Optional)</h3>
+            <p>
+                This option helps prepare the environment of each machine by configuring 
+                necessary prerequisites before setting up replication.
+            </p>
+
+            <h2><i class="fas fa-check-circle"></i> Conclusion</h2>
+            <p>
+                With this automated tool, setting up MySQL replication becomes significantly faster,
+                more reliable, and easier to maintain. Whether you are using one-way or two-way replication,
+                the combination of shell scripting and Ansible greatly simplifies the process.
+            </p>
+
+            <div class="article-footer">
+                <div class="author-bio">
+                    <div class="author-avatar">
+                        <img src="../assets/images/me.png" alt="Lahcen Benhaddou">
+                    </div>
+                    <div class="author-info">
+                        <h4>Written by Lahcen Benhaddou</h4>
+                        <p>Software Engineer specializing in backend development, distributed systems, and DevOps</p>
+                    </div>
+                </div>
+
+                <div class="article-share">
+                    <h4>Share this article</h4>
+                    <div class="share-buttons">
+                        <a href="#" class="share-btn"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="share-btn"><i class="fab fa-linkedin"></i></a>
+                        <a href="#" class="share-btn"><i class="fab fa-facebook"></i></a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</article>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-info">
+                    <h3>LAHCEN BENHADDOU</h3>
+                    <p>Software Engineer | Backend & Distributed Systems</p>
+                </div>
+                <div class="footer-links">
+                    <a href="https://github.com/Benhaddou-Lahcen" target="_blank" aria-label="GitHub">
+                        <i class="fab fa-github"></i>
+                    </a>
+                    <a href="https://leetcode.com/lahcenbenhaddou" target="_blank" aria-label="LeetCode">
+                        <i class="fas fa-code"></i>
+                    </a>
+                    <a href="https://www.linkedin.com/in/lahcen-benhaddou" target="_blank" aria-label="LinkedIn">
+                        <i class="fab fa-linkedin"></i>
+                    </a>
+                    <a href="mailto:lahcenbenhaddou282@gmail.com" aria-label="Email">
+                        <i class="fas fa-envelope"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Lahcen Benhaddou. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../assets/js/main-clean.js"></script>
+    <script>
+        // Copy code functionality
+        function copyCode(button) {
+            const codeBlock = button.closest('.code-block');
+            const code = codeBlock.querySelector('code').textContent;
+            
+            navigator.clipboard.writeText(code).then(() => {
+                const icon = button.querySelector('i');
+                icon.classList.remove('fa-copy');
+                icon.classList.add('fa-check');
+                button.style.color = '#10b981';
+                
+                setTimeout(() => {
+                    icon.classList.remove('fa-check');
+                    icon.classList.add('fa-copy');
+                    button.style.color = '';
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>

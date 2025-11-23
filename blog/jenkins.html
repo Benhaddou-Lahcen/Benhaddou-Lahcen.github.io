@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jenkins + SonarQube CI/CD Pipeline | Lahcen Benhaddou</title>
+    <link rel="stylesheet" href="../assets/css/styles-clean.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="animated-bg">
+        <div class="wave wave1"></div>
+        <div class="wave wave2"></div>
+        <div class="wave wave3"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="../index.html" class="nav-brand">LAHCEN BENHADDOU</a>
+            <ul class="nav-menu">
+                <li><a href="../index.html#home" class="nav-link">Home</a></li>
+                <li><a href="../index.html#blog" class="nav-link active">Blog</a></li>
+                <li><a href="../index.html#about" class="nav-link">About</a></li>
+                <li><a href="../index.html#experience" class="nav-link">Experience</a></li>
+                <li><a href="../index.html#projects" class="nav-link">Projects</a></li>
+                <li><a href="../index.html#contact" class="nav-link">Contact</a></li>
+            </ul>
+            <div class="nav-actions">
+                <button id="themeToggle" class="theme-toggle">
+                    <i class="fas fa-sun"></i>
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Blog Article -->
+    <article class="blog-article">
+        <div class="container">
+            <div class="article-header">
+                <a href="../all-posts.html" class="back-link">
+                    <i class="fas fa-arrow-left"></i> Back to All Posts
+                </a>
+                
+                <div class="article-meta">
+                    <span class="article-category"><i class="fas fa-cogs"></i> DevOps</span>
+                    <span class="article-date"><i class="far fa-calendar"></i> November 17, 2025</span>
+                    <span class="article-read-time"><i class="far fa-clock"></i> 18 min read</span>
+                </div>
+                
+                <h1 class="article-title">Complete Guide: Jenkins + SonarQube CI/CD Pipeline with Docker</h1>
+                
+                <div class="article-tags">
+                    <span class="tag">Jenkins</span>
+                    <span class="tag">SonarQube</span>
+                    <span class="tag">Docker</span>
+                    <span class="tag">CI/CD</span>
+                    <span class="tag">DevOps</span>
+                </div>
+            </div>
+
+            <div class="article-image">
+                <img src="../assets/blog-images/demo.png" alt="Jenkins CI/CD">
+            </div>
+
+            <div class="article-content">
+                <div class="article-intro">
+                    <p>
+                        Setting up a complete CI/CD pipeline with Jenkins and SonarQube is essential for maintaining 
+                        code quality and automating your build process. In this comprehensive guide, we'll walk through 
+                        the entire setup using Docker Compose, from installation to automated GitHub webhooks.
+                    </p>
+                </div>
+
+                <h2><i class="fas fa-docker"></i> Step 1: Docker Compose Setup</h2>
+                <p>
+                    First, we'll set up Jenkins, SonarQube, and PostgreSQL using Docker Compose. This configuration 
+                    ensures all services work together seamlessly.
+                </p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>docker-compose.yml</span>
+                        <button class="copy-btn" onclick="copyCode(this)"><i class="far fa-copy"></i></button>
+                    </div>
+                    <pre><code>version: '3.8'
+
+services:
+  jenkins:
+    image: jenkins/jenkins:lts-jdk17
+    container_name: jenkins
+    user: root
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock  
+    environment:
+      JAVA_OPTS: "-Djenkins.install.runSetupWizard=false"
+    depends_on:
+      - sonarqube
+
+  sonarqube:
+    image: sonarqube:community
+    container_name: sonarqube
+    ports:
+      - "9000:9000"
+    environment:
+      SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: "true"
+      SONAR_JDBC_URL: jdbc:postgresql://db:5432/sonar
+      SONAR_JDBC_USERNAME: sonar
+      SONAR_JDBC_PASSWORD: sonar
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15
+    container_name: sonarqube_db
+    environment:
+      POSTGRES_USER: sonar
+      POSTGRES_PASSWORD: sonar
+      POSTGRES_DB: sonar
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+volumes:
+  jenkins_home:
+  db_data:</code></pre>
+                </div>
+
+                <p>Start the services with:</p>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Terminal</span>
+                        <button class="copy-btn" onclick="copyCode(this)"><i class="far fa-copy"></i></button>
+                    </div>
+                    <pre><code>docker-compose up -d</code></pre>
+                </div>
+
+                <p>Access Jenkins at <code>http://localhost:8080</code> and SonarQube at <code>http://localhost:9000</code></p>
+
+                <h2><i class="fas fa-plug"></i> Step 2: Install Jenkins Plugins</h2>
+                <p>
+                    Navigate to <strong>Settings → Plugins</strong> in Jenkins and install the following essential plugins:
+                </p>
+                <ul>
+                    <li>Maven Integration Plugin</li>
+                    <li>Pipeline</li>
+                    <li>Pipeline: Groovy</li>
+                    <li>Pipeline: GitHub</li>
+                    <li>SonarQube Plugin</li>
+                    <li>SonarQube Scanner</li>
+                </ul>
+
+                <div class="article-image-inline">
+                    <img src="../assets/blog-images/1.png" alt="Jenkins Plugins Installation">
+                    <p class="image-caption">Jenkins plugins installation screen</p>
+                </div>
+
+                <h2><i class="fas fa-tools"></i> Step 3: Configure Tools in Jenkins</h2>
+                
+                <h3>Maven Configuration</h3>
+                <p>Go to <strong>Settings → Tools</strong> and add Maven:</p>
+                <ul>
+                    <li>Name: <code>Maven</code></li>
+                    <li>Version: 3.9.2 (automatic installation)</li>
+                </ul>
+
+                <div class="article-image-inline">
+                    <img src="../assets/blog-images/2.png" alt="Maven Configuration">
+                    <p class="image-caption">Maven tool configuration</p>
+                </div>
+
+                <h3>SonarQube Scanner Configuration</h3>
+                <p>In the same Tools section, add SonarQube Scanner with automatic installation.</p>
+
+                <div class="article-image-inline">
+                    <img src="../assets/blog-images/3.png" alt="SonarQube Scanner Configuration">
+                    <p class="image-caption">SonarQube Scanner setup</p>
+                </div>
+
+                <h2><i class="fas fa-key"></i> Step 4: Configure SonarQube Token</h2>
+                <p>
+                    First, generate a token in SonarQube (My Account → Security → Generate Token). 
+                    Then add it to Jenkins:
+                </p>
+                <ol>
+                    <li>Go to <strong>Settings → Credentials → Global</strong></li>
+                    <li>Click <strong>Add Credentials</strong></li>
+                    <li>Select <strong>Secret text</strong> as type</li>
+                    <li>Paste your SonarQube token</li>
+                    <li>ID: <code>sonar</code></li>
+                </ol>
+
+                <div class="article-image-inline">
+                    <img src="../assets/blog-images/4.png" alt="SonarQube Token Configuration">
+                    <p class="image-caption">Adding SonarQube credentials</p>
+                </div>
+
+                <h2><i class="fas fa-server"></i> Step 5: Configure SonarQube Server</h2>
+                <p>
+                    Navigate to <strong>Settings → System → SonarQube servers</strong> and add:
+                </p>
+                <ul>
+                    <li><strong>Name:</strong> SonarQube</li>
+                    <li><strong>Server URL:</strong> http://localhost:9000</li>
+                    <li><strong>Authentication token:</strong> Select the credential you created (sonar)</li>
+                </ul>
+
+                <div class="article-image-inline">
+                    <img src="../assets/blog-images/5.png" alt="SonarQube Server Configuration">
+                    <p class="image-caption">SonarQube server setup in Jenkins</p>
+                </div>
+
+                <h2><i class="fab fa-github"></i> Step 6: Configure GitHub Credentials</h2>
+                <p>
+                    To allow Jenkins to clone your repository, add GitHub credentials:
+                </p>
+                <ol>
+                    <li>Go to <strong>Settings → Credentials → Global</strong></li>
+                    <li>Click <strong>Add Credentials</strong></li>
+                    <li>Type: <strong>Username with password</strong></li>
+                    <li>Username: Your GitHub username</li>
+                    <li>Password: Personal Access Token (generate from GitHub Settings → Developer settings → Personal access tokens)</li>
+                    <li>ID: <code>github-credentials</code></li>
+                </ol>
+
+                <h2><i class="fas fa-project-diagram"></i> Step 7: Create Pipeline Job</h2>
+                
+                <h3>Create New Pipeline</h3>
+                <ol>
+                    <li>Click <strong>New Item</strong></li>
+                    <li>Enter a name for your pipeline</li>
+                    <li>Select <strong>Pipeline</strong></li>
+                    <li>Click OK</li>
+                </ol>
+
+                <h3>Configure Pipeline from SCM</h3>
+                <p>In the pipeline configuration:</p>
+                <ul>
+                    <li><strong>Definition:</strong> Pipeline script from SCM</li>
+                    <li><strong>SCM:</strong> Git</li>
+                    <li><strong>Repository URL:</strong> Your GitHub repository URL</li>
+                    <li><strong>Credentials:</strong> Select your GitHub credentials</li>
+                    <li><strong>Branch:</strong> */main (or your branch name)</li>
+                    <li><strong>Script Path:</strong> Jenkinsfile</li>
+                </ul>
+
+                <div class="article-image-inline">
+                    <img src="../assets/blog-images/6.png" alt="Pipeline Configuration">
+                    <p class="image-caption">Pipeline SCM configuration</p>
+                </div>
+
+                <h2><i class="fas fa-webhook"></i> Step 8: Configure GitHub Webhook (Optional)</h2>
+                <p>
+                    For automatic pipeline triggers on every push:
+                </p>
+
+                <h3>Expose Jenkins (if on localhost)</h3>
+                <p>Use ngrok or Cloudflare Tunnel to expose Jenkins:</p>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Using ngrok</span>
+                        <button class="copy-btn" onclick="copyCode(this)"><i class="far fa-copy"></i></button>
+                    </div>
+                    <pre><code>ngrok http 8080</code></pre>
+                </div>
+
+                <h3>Add Webhook in GitHub</h3>
+                <ol>
+                    <li>Go to your GitHub repository</li>
+                    <li><strong>Settings → Webhooks → Add webhook</strong></li>
+                    <li><strong>Payload URL:</strong> <code>http://your-jenkins-url/github-webhook/</code></li>
+                    <li><strong>Content type:</strong> application/json</li>
+                    <li><strong>Events:</strong> Just the push event</li>
+                    <li>Click <strong>Add webhook</strong></li>
+                </ol>
+
+                <div class="alert-box">
+                    <i class="fas fa-info-circle"></i>
+                    <div>
+                        <strong>Manual Alternative:</strong> If you don't want webhooks, you can trigger the pipeline 
+                        manually from Jenkins after each commit.
+                    </div>
+                </div>
+
+                <h2><i class="fas fa-file-code"></i> Step 9: Create Jenkinsfile</h2>
+                <p>
+                    Create a <code>Jenkinsfile</code> in your repository root with the following pipeline definition:
+                </p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Jenkinsfile</span>
+                        <button class="copy-btn" onclick="copyCode(this)"><i class="far fa-copy"></i></button>
+                    </div>
+                    <pre><code>pipeline {
+    agent any
+
+    environment {
+        SONAR_HOST_URL = 'http://localhost:9000'
+        SONAR_TOKEN = credentials('sonar')
+    }
+
+    stages {
+
+        stage('Stage 1: Build') {
+            steps {
+                echo 'Building the project...'
+                sh "${tool 'Maven'}/bin/mvn clean compile"
+            }
+        }
+
+        stage('Stage 2: SonarQube Analysis') {
+            steps {
+                script {
+                    withSonarQubeEnv('SonarQube') {
+                        sh """
+                            ${tool 'Maven'}/bin/mvn sonar:sonar \
+                            -Dsonar.projectKey=sonarQube \
+                            -Dsonar.host.url=$SONAR_HOST_URL \
+                            -Dsonar.login=$SONAR_TOKEN
+                        """
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo "Pipeline finished!"
+        }
+        success {
+            echo "Pipeline executed successfully!"
+        }
+        failure {
+            echo "Pipeline failed!"
+        }
+    }
+}</code></pre>
+                </div>
+
+                <h3>Pipeline Stages Explained</h3>
+                <ul>
+                    <li><strong>Stage 1: Build</strong> - Compiles the project using Maven</li>
+                    <li><strong>Stage 2: SonarQube Analysis</strong> - Runs code quality analysis</li>
+                    <li><strong>Post actions</strong> - Executes after pipeline completion</li>
+                </ul>
+
+                <h2><i class="fas fa-rocket"></i> Step 10: Run the Pipeline</h2>
+                <p>
+                    Now you can trigger the pipeline:
+                </p>
+                <ul>
+                    <li><strong>Automatic:</strong> Push a commit to your repository</li>
+                    <li><strong>Manual:</strong> Click "Build Now" in Jenkins</li>
+                </ul>
+
+                <div class="article-image-inline">
+                    <img src="../assets/blog-images/7.png" alt="Pipeline Execution">
+                    <p class="image-caption">Pipeline execution in Jenkins</p>
+                </div>
+
+                <h2><i class="fas fa-chart-bar"></i> Step 11: View Results in SonarQube</h2>
+                <p>
+                    After the pipeline completes, view the analysis results in SonarQube at <code>http://localhost:9000</code>
+                </p>
+
+                <div class="article-image-inline">
+                    <img src="../assets/blog-images/8.png" alt="SonarQube Results">
+                    <p class="image-caption">Code quality analysis results in SonarQube</p>
+                </div>
+
+                <h2><i class="fas fa-check-circle"></i> Troubleshooting Common Issues</h2>
+                
+                <h3>1. Maven not found</h3>
+                <p>Make sure Maven is configured in <strong>Settings → Tools</strong> with the exact name "Maven".</p>
+
+                <h3>2. SonarQube connection failed</h3>
+                <p>Verify that:</p>
+                <ul>
+                    <li>SonarQube container is running</li>
+                    <li>The URL in Jenkins matches your setup</li>
+                    <li>The token is valid and correctly stored</li>
+                </ul>
+
+                <h3>3. GitHub webhook not triggering</h3>
+                <p>Check:</p>
+                <ul>
+                    <li>Webhook URL is correct and accessible</li>
+                    <li>Recent deliveries in GitHub webhook settings</li>
+                    <li>Jenkins is properly exposed (if using ngrok/cloudflare)</li>
+                </ul>
+
+                <h2><i class="fas fa-lightbulb"></i> Best Practices</h2>
+                <ul>
+                    <li>✓ Use environment variables for sensitive data</li>
+                    <li>✓ Set up quality gates in SonarQube</li>
+                    <li>✓ Configure proper branch protection in GitHub</li>
+                    <li>✓ Add email notifications on pipeline failure</li>
+                    <li>✓ Regular backup of Jenkins configuration</li>
+                    <li>✓ Use declarative pipeline syntax</li>
+                </ul>
+
+                <h2><i class="fas fa-trophy"></i> Conclusion</h2>
+                <p>
+                    You now have a fully functional CI/CD pipeline with Jenkins and SonarQube! This setup provides:
+                </p>
+                <ul>
+                    <li>✓ Automated builds on every commit</li>
+                    <li>✓ Continuous code quality analysis</li>
+                    <li>✓ Early detection of code issues</li>
+                    <li>✓ Improved team productivity</li>
+                    <li>✓ Consistent code standards</li>
+                </ul>
+
+                <div class="next-steps-box">
+                    <h3><i class="fas fa-forward"></i> Next Steps</h3>
+                    <ul>
+                        <li>Add automated testing stages</li>
+                        <li>Configure deployment stages</li>
+                        <li>Set up quality gates</li>
+                        <li>Integrate with Slack/Email notifications</li>
+                        <li>Add Docker build and push stages</li>
+                    </ul>
+                </div>
+
+                <div class="article-footer">
+                    <div class="author-bio">
+                        <div class="author-avatar">
+                            <img src="../assets/images/me.png" alt="Lahcen Benhaddou">
+                        </div>
+                        <div class="author-info">
+                            <h4>Written by Lahcen Benhaddou</h4>
+                            <p>Software Engineer specializing in backend development, distributed systems, and DevOps</p>
+                        </div>
+                    </div>
+                    
+                    <div class="article-share">
+                        <h4>Share this article</h4>
+                        <div class="share-buttons">
+                            <a href="#" class="share-btn"><i class="fab fa-twitter"></i></a>
+                            <a href="#" class="share-btn"><i class="fab fa-linkedin"></i></a>
+                            <a href="#" class="share-btn"><i class="fab fa-facebook"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </article>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-info">
+                    <h3>LAHCEN BENHADDOU</h3>
+                    <p>Software Engineer | Backend & Distributed Systems</p>
+                </div>
+                <div class="footer-links">
+                    <a href="https://github.com/Benhaddou-Lahcen" target="_blank" aria-label="GitHub">
+                        <i class="fab fa-github"></i>
+                    </a>
+                    <a href="https://leetcode.com/lahcenbenhaddou" target="_blank" aria-label="LeetCode">
+                        <i class="fas fa-code"></i>
+                    </a>
+                    <a href="https://www.linkedin.com/in/lahcen-benhaddou" target="_blank" aria-label="LinkedIn">
+                        <i class="fab fa-linkedin"></i>
+                    </a>
+                    <a href="mailto:lahcenbenhaddou282@gmail.com" aria-label="Email">
+                        <i class="fas fa-envelope"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Lahcen Benhaddou. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../assets/js/main-clean.js"></script>
+    <script>
+        // Copy code functionality
+        function copyCode(button) {
+            const codeBlock = button.closest('.code-block');
+            const code = codeBlock.querySelector('code').textContent;
+            
+            navigator.clipboard.writeText(code).then(() => {
+                const icon = button.querySelector('i');
+                icon.classList.remove('fa-copy');
+                icon.classList.add('fa-check');
+                button.style.color = '#10b981';
+                
+                setTimeout(() => {
+                    icon.classList.remove('fa-check');
+                    icon.classList.add('fa-copy');
+                    button.style.color = '';
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>

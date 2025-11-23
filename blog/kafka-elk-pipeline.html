@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kafka + ELK Logging Pipeline on Kubernetes | Lahcen Benhaddou</title>
+    <link rel="stylesheet" href="../assets/css/styles-clean.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="animated-bg">
+        <div class="wave wave1"></div>
+        <div class="wave wave2"></div>
+        <div class="wave wave3"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="../index.html" class="nav-brand">LAHCEN BENHADDOU</a>
+            <ul class="nav-menu">
+                <li><a href="../index.html#home" class="nav-link">Home</a></li>
+                <li><a href="../index.html#blog" class="nav-link active">Blog</a></li>
+                <li><a href="../index.html#about" class="nav-link">About</a></li>
+                <li><a href="../index.html#experience" class="nav-link">Experience</a></li>
+                <li><a href="../index.html#projects" class="nav-link">Projects</a></li>
+                <li><a href="../index.html#contact" class="nav-link">Contact</a></li>
+            </ul>
+            <div class="nav-actions">
+                <button id="themeToggle" class="theme-toggle">
+                    <i class="fas fa-sun"></i>
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Blog Article -->
+    <article class="blog-article">
+        <div class="container">
+            <div class="article-header">
+                <a href="../all-posts.html" class="back-link">
+                    <i class="fas fa-arrow-left"></i> Back to All Posts
+                </a>
+                
+                <div class="article-meta">
+                    <span class="article-category"><i class="fas fa-layer-group"></i> DevOps</span>
+                    <span class="article-date"><i class="far fa-calendar"></i> June 25, 2025</span>
+                    <span class="article-read-time"><i class="far fa-clock"></i> 20 min read</span>
+                </div>
+                
+                <h1 class="article-title">Designing a Production-Grade Kafka + ELK Logging Pipeline on Kubernetes</h1>
+                
+                <div class="article-tags">
+                    <span class="tag">Kafka</span>
+                    <span class="tag">ELK Stack</span>
+                    <span class="tag">Kubernetes</span>
+                    <span class="tag">Logging</span>
+                    <span class="tag">DevOps</span>
+                </div>
+            </div>
+
+            <div class="article-image">
+                <img src="../assets/blog-images/kafka1.png" alt="Kafka ELK Pipeline Architecture">
+            </div>
+
+            <div class="article-content">
+                <div class="article-intro">
+                    <p>
+                        As projects grow, Docker Compose quickly becomes insufficient for production-grade workloads. 
+                        Managing replicas, ensuring high availability, handling node failures, and dynamically scheduling 
+                        containers all become challenging as the environment expands.
+                    </p>
+                    <p>
+                        This led me to take the next logical step: migrating the entire architecture to Kubernetes (K8s), 
+                        a powerful container orchestration platform that automates deployment, scaling, and management of 
+                        containerized applications. Our goal is to deploy a robust log ingestion pipeline inside Kubernetes 
+                        and integrate various log sources — whether they are network logs, application logs, or logs from 
+                        monolithic or microservice applications.
+                    </p>
+                </div>
+
+                <h2><i class="fas fa-list-check"></i> What We'll Cover</h2>
+                <p>In this comprehensive guide, I'll walk you through:</p>
+                <ul>
+                    <li>Deploying KELK (Kafka, Elasticsearch, Logstash, Kibana) resources on Minikube</li>
+                    <li>Validating and testing the deployment by ingesting messages into Kafka</li>
+                    <li>Visualizing logs in Grafana</li>
+                </ul>
+
+                <h2><i class="fas fa-rocket"></i> Prerequisites</h2>
+                <p>Before we begin, make sure you have:</p>
+                <ul>
+                    <li>A running Kubernetes cluster (I use Minikube for this tutorial)</li>
+                    <li><code>kubectl</code> CLI tool installed</li>
+                    <li>Basic understanding of Kubernetes concepts</li>
+                </ul>
+
+                <h2><i class="fas fa-folder"></i> Step 1: Create Namespace</h2>
+                <p>
+                    Let's start by creating a dedicated namespace for our KELK stack. Namespaces in Kubernetes help 
+                    isolate resources logically, ensuring that KELK resources do not interfere with other applications 
+                    running in the cluster.
+                </p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Create Namespace</span>
+                        <button class="copy-btn" onclick="copyCode(this)"><i class="far fa-copy"></i></button>
+                    </div>
+                    <pre><code>kubectl create namespace kelk</code></pre>
+                </div>
+
+                <h2><i class="fas fa-stream"></i> Step 2: Kafka Deployment</h2>
+                <p>
+                    In newer versions, Apache Kafka no longer depends on ZooKeeper to manage cluster metadata or handle 
+                    controller elections. Instead, it introduces a new operating mode called <strong>KRaft</strong> 
+                    (Kafka Raft Metadata mode), which allows Kafka to operate independently of ZooKeeper, simplifying 
+                    the architecture.
+                </p>
+
+                <h3>2.1 Set Up Kafka Persistent Storage</h3>
+                <p>
+                    Kafka stores logs and metadata on disk. A PersistentVolumeClaim (PVC) ensures that Kafka data 
+                    persists even if the Pod is restarted, avoiding data loss.
+                </p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>kafka-pvc.yaml</span>
+                        <button class="copy-btn" onclick="copyCode(this)"><i class="far fa-copy"></i></button>
+                    </div>
+                    <pre><code>apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: kafka-pvc
+  namespace: kelk
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi</code></pre>
+                </div>
+
+                <h3>2.2 Kafka Service</h3>
+                <p>
+                    The service is optional for a single-node setup, but it becomes essential in a multi-node cluster 
+                    for broker-to-broker and client communication.
+                </p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>kafka-service.yaml</span>
+                        <button class="copy-btn" onclick="copyCode(this)"><i class="far fa-copy"></i></button>
+                    </div>
+                    <pre><code>apiVersion: v1
+kind: Service
+metadata:
+  name: kafka-service
+  namespace: kelk
+spec:
+  selector:
+    app: kafka
+  ports:
+    - name: kafka
+      protocol: TCP
+      port: 9092
+      targetPort: 9092
+    - name: controller
+      protocol: TCP
+      port: 9093
+      targetPort: 9093</code></pre>
+                </div>
+
+                <h3>2.3 Deploy Kafka as a StatefulSet</h3>
+                <p>
+                    StatefulSet is ideal for Kafka because it maintains stable network identities and persistent storage.
+                </p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>kafka-statefulset.yaml</span>
+                        <button class="copy-btn" onclick="copyCode(this)"><i class="far fa-copy"></i></button>
+                    </div>
+                    <pre><code>apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: kafka
+  namespace: kelk
+spec:
+  serviceName: "kafka-service"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka
+  template:
+    metadata:
+      labels:
+        app: kafka
+    spec:
+      containers:
+        - name: kafka
+          image: apache/kafka:latest
+          ports:
+            - containerPort: 9092
+              name: kafka
+            - containerPort: 9093
+              name: controller
+          volumeMounts:
+            - name: kafka-storage
+              mountPath: /var/lib/kafka/data
+          env:
+            - name: KAFKA_PROCESS_ROLES
+              value: "broker,controller"
+            - name: KAFKA_CONTROLLER_LISTENER_NAMES
+              value: "CONTROLLER"
+            - name: KAFKA_LISTENERS
+              value: "PLAINTEXT://:9092,CONTROLLER://:9093"
+            - name: KAFKA_CONTROLLER_QUORUM_VOTERS
+              value: "1@kafka-0.kafka-service.kelk.svc.cluster.local:9093"
+            - name: KAFKA_NODE_ID
+              value: "1"
+            - name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
+              value: "PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT"
+            - name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
+              value: "1"
+            - name: KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR
+              value: "1"
+            - name: KAFKA_ADVERTISED_LISTENERS
+              value: "PLAINTEXT://kafka-0.kafka-service.kelk.svc.cluster.local:9092"
+            - name: KAFKA_LOG_DIRS
+              value: "/var/lib/kafka/data"
+            - name: KAFKA_INTER_BROKER_LISTENER_NAME
+              value: "PLAINTEXT"
+      volumes:
+        - name: kafka-storage
+          persistentVolumeClaim:
+            claimName: kafka-pvc</code></pre>
+                </div>
+
+                <div class="alert-box">
+                    <i class="fas fa-lightbulb"></i>
+                    <div>
+                        <strong>Pro Tip:</strong> You can combine all these configurations in a single YAML file 
+                        separated by <code>---</code> and apply them with <code>kubectl apply -f &lt;file_name&gt;.yaml</code>
+                    </div>
+                </div>
+
+                <h2><i class="fas fa-database"></i> Step 3: Elasticsearch Deployment</h2>
+                <p>
+                    Elasticsearch serves as the database where Logstash writes logs ingested from Kafka topics.
+                </p>
+
+                <h3>3.1 Set Up Elasticsearch Persistent Storage</h3>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>es-pvc.yaml</span>
+                        <button class="copy-btn" onclick="copyCode(this)"><i class="far fa-copy"></i></button>
+                    </div>
+                    <pre><code>apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: es-pvc
+  namespace: kelk
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi</code></pre>
+                </div>
+
+                <h3>3.2 Elasticsearch Service</h3>
+                <p>
+                    This service is necessary for Grafana (Kibana) or any other client to access Elasticsearch indexes.
+                </p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>es-service.yaml</span>
+                        <button class="copy-btn" onclick="copyCode(this)"><i class="far fa-copy"></i></button>
+                    </div>
+                    <pre><code>apiVersion: v1
+kind: Service
+metadata:
+  name: es-service
+  namespace: kelk
+spec:
+  selector:
+    app: es
+  ports:
+    - name: http
+      protocol: TCP
+      port: 9200
+      targetPort: 9200
+    - name: transport
+      protocol: TCP
+      port: 9300
+      targetPort: 9300</code></pre>
+                </div>
+
+                <h3>3.3 Deploy Elasticsearch as a StatefulSet</h3>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>es-statefulset.yaml</span>
+                        <button class="copy-btn" onclick="copyCode(this)"><i class="far fa-copy"></i></button>
+                    </div>
+                    <pre><code>apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: es
+  namespace: kelk
+spec:
+  serviceName: "es-service"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: es
+  template:
+    metadata:
+      labels:
+        app: es
+    spec:
+      containers:
+        - name: es
+          image: docker.elastic.co/elasticsearch/elasticsearch:8.10.2
+          ports:
+            - containerPort: 9200
+              name: http
+            - containerPort: 9300
+              name: transport
+          volumeMounts:
+            - name: es-storage
+              mountPath: /usr/share/elasticsearch/data
+          env:
+            - name: cluster.name
+              value: "kafka-cluster"
+            - name: bootstrap.memory_lock
+              value: "true"
+            - name: network.host
+              value: "0.0.0.0"
+            - name: discovery.type
+              value: "single-node"
+            - name: xpack.security.enabled
+              value: "false"
+            - name: ES_JAVA_OPTS
+              value: "-Xms512m -Xmx512m"
+      volumes:
+        - name: es-storage
+          persistentVolumeClaim:
+            claimName: es-pvc</code></pre>
+                </div>
+
+                <h2><i class="fas fa-filter"></i> Step 4: Logstash Deployment</h2>
+                <p>
+                    Logstash is a very powerful tool with the capability to pull and collect data from numerous sources, 
+                    apply different operations such as filtering or enrichment, and then forward the logs to many outputs. 
+                    For our use case, we'll create a pipeline configuration to instruct Logstash to read from a specific 
+                    Kafka topic and output it to Elasticsearch.
+                </p>
+
+                <h3>4.1 Create Logstash Configuration Files</h3>
+                <p>First, create the pipeline configuration file:</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>logstash-kafka.conf</span>
+                        <button class="copy-btn" onclick="copyCode(this)"><i class="far fa-copy"></i></button>
+                    </div>
+                    <pre><code>input {
+  kafka {
+    bootstrap_servers => "kafka-0.kafka-service.kelk.svc.cluster.local:9092"
+    topics => ["logs"]
+  }
+}
+
+output {
+  elasticsearch {
+    hosts => ["http://es-0.es-service.kelk.svc.cluster.local:9200"]
+    index => "logs"
+    workers => 1
+  }
+}</code></pre>
+                </div>
+
+                <p>And the Logstash YAML configuration:</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>logstash.yml</span>
+                        <button class="copy-btn" onclick="copyCode(this)"><i class="far fa-copy"></i></button>
+                    </div>
+                    <pre><code>http.host: "0.0.0.0"
+xpack.monitoring.elasticsearch.hosts: [ "http://es-0.es-service.kelk.svc.cluster.local:9200" ]</code></pre>
+                </div>
+
+                <h3>4.2 Create ConfigMaps</h3>
+                <p>Create ConfigMaps from these configuration files:</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Create ConfigMaps</span>
+                        <button class="copy-btn" onclick="copyCode(this)"><i class="far fa-copy"></i></button>
+                    </div>
+                    <pre><code>kubectl create configmap logstash-config --from-file=logstash-kafka.conf -n kelk
+kubectl create configmap logstash-yaml --from-file=logstash.yml -n kelk</code></pre>
+                </div>
+
+                <h3>4.3 Set Up Logstash Persistent Storage</h3>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>logstash-pvc.yaml</span>
+                        <button class="copy-btn" onclick="copyCode(this)"><i class="far fa-copy"></i></button>
+                    </div>
+                    <pre><code>apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: lgstch-pvc
+  namespace: kelk
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi</code></pre>
+                </div>
+
+                <h3>4.4 Deploy Logstash as a StatefulSet</h3>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>logstash-statefulset.yaml</span>
+                        <button class="copy-btn" onclick="copyCode(this)"><i class="far fa-copy"></i></button>
+                    </div>
+                    <pre><code>apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: logstash-service
+  namespace: kelk
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: logstash
+  template:
+    metadata:
+      labels:
+        app: logstash
+    spec:
+      containers:
+        - name: logstash
+          image: docker.elastic.co/logstash/logstash:8.10.2
+          volumeMounts:
+            - name: logstash-config-volume
+              mountPath: /usr/share/logstash/pipeline/logstash.conf
+              subPath: logstash-kafka.conf
+            - name: logstash-yaml-volume
+              mountPath: /usr/share/logstash/config/logstash.yml
+              subPath: logstash.yml
+      volumes:
+        - name: logstash-config-volume
+          configMap:
+            name: logstash-config
+        - name: logstash-yaml-volume
+          configMap:
+            name: logstash-yaml</code></pre>
+                </div>
+
+                <h2><i class="fas fa-check-double"></i> Step 5: Deployment Validation</h2>
+                
+                <h3>5.1 Check All Resources</h3>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Verify Deployments</span>
+                        <button class="copy-btn" onclick="copyCode(this)"><i class="far fa-copy"></i></button>
+                    </div>
+                    <pre><code>kubectl get all -n kelk</code></pre>
+                </div>
+
+                <p>Expected output:</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Output</span>
+                    </div>
+                    <pre><code>NAME                     READY   STATUS    RESTARTS      AGE
+pod/es-0                 1/1     Running   2 (13h ago)   18h
+pod/kafka-0              1/1     Running   2 (13h ago)   20h
+pod/logstash-service-0   1/1     Running   1 (13h ago)   16h
+
+NAME                    TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)             AGE
+service/es-service      ClusterIP   10.107.125.4   <none>        9200/TCP,9300/TCP   18h
+service/kafka-service   ClusterIP   10.101.25.94   <none>        9092/TCP,9093/TCP   21h
+
+NAME                                READY   AGE
+statefulset.apps/es                 1/1     18h
+statefulset.apps/kafka              1/1     20h
+statefulset.apps/logstash-service   1/1     16h</code></pre>
+                </div>
+
+                <h3>5.2 Validate ConfigMaps and PVCs</h3>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Check PVCs</span>
+                        <button class="copy-btn" onclick="copyCode(this)"><i class="far fa-copy"></i></button>
+                    </div>
+                    <pre><code>kubectl get pvc -n kelk</code></pre>
+                </div>
+
+                <p>Expected output:</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Output</span>
+                    </div>
+                    <pre><code>NAME        STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+es-pvc      Bound    pvc-a35c2dba-2236-4128-ad47-9df39596f9a5   5Gi        RWO            standard       18h
+kafka-pvc   Bound    pvc-e85e8b6b-59bc-4d68-bf99-62ef7e8e6ee6   5Gi        RWO            standard       20h</code></pre>
+                </div>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Check ConfigMaps</span>
+                        <button class="copy-btn" onclick="copyCode(this)"><i class="far fa-copy"></i></button>
+                    </div>
+                    <pre><code>kubectl get configmap -n kelk</code></pre>
+                </div>
+
+                <p>Expected output:</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Output</span>
+                    </div>
+                    <pre><code>NAME               DATA   AGE
+kube-root-ca.crt   1      21h
+logstash-config    1      17h
+logstash-yaml      1      16h</code></pre>
+                </div>
+
+                <h2><i class="fas fa-vial"></i> Step 6: Testing the Pipeline</h2>
+                
+                <h3>6.1 Port Forward Elasticsearch</h3>
+                <p>
+                    Before starting to ingest and visualize data, let's port forward the Elasticsearch service. 
+                    This can be done with a simple command or made permanent by changing the service type to NodePort.
+                </p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Port Forward ES</span>
+                        <button class="copy-btn" onclick="copyCode(this)"><i class="far fa-copy"></i></button>
+                    </div>
+                    <pre><code>kubectl port-forward pod/es-0 --address 0.0.0.0 9200:9200 -n kelk</code></pre>
+                </div>
+
+                <h3>6.2 Configure Grafana Data Source</h3>
+                <p>
+                    In Grafana, make a new data source connection with your host IP address (localhost will work if 
+                    running locally).
+                </p>
+
+                <div class="article-image-inline">
+                    <img src="../assets/blog-images/kafka2.png" alt="Grafana Data Source Configuration">
+                    <p class="image-caption">Grafana Elasticsearch data source configuration</p>
+                </div>
+
+                <h3>6.3 Producing Kafka Messages</h3>
+                <p>First, access the Kafka pod:</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Access Kafka Pod</span>
+                        <button class="copy-btn" onclick="copyCode(this)"><i class="far fa-copy"></i></button>
+                    </div>
+                    <pre><code>kubectl exec -it pod/kafka-0 -n kelk -- /bin/bash</code></pre>
+                </div>
+
+                <p>Now, use the Kafka console producer to send test messages:</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Produce Messages</span>
+                        <button class="copy-btn" onclick="copyCode(this)"><i class="far fa-copy"></i></button>
+                    </div>
+                    <pre><code>kafka-0:/$ /opt/kafka/bin/kafka-console-producer.sh --topic logs --bootstrap-server localhost:9092
+>Hi! This is a test
+></code></pre>
+                </div>
+
+                <h3>6.4 Visualize in Grafana</h3>
+                <p>
+                    Let's check Grafana if the message was ingested correctly. Go to <strong>Explore</strong> and 
+                    choose <strong>logs</strong>:
+                </p>
+
+                <div class="article-image-inline">
+                    <img src="../assets/blog-images/kafka3.png" alt="Grafana Logs Visualization">
+                    <p class="image-caption">Messages successfully ingested and visualized in Grafana</p>
+                </div>
+
+                <h2><i class="fas fa-graduation-cap"></i> Key Takeaways</h2>
+                <ul>
+                    <li>✓ Kubernetes provides better scalability compared to Docker Compose</li>
+                    <li>✓ StatefulSets ensure stable network identities and persistent storage</li>
+                    <li>✓ KRaft mode simplifies Kafka deployment by removing ZooKeeper dependency</li>
+                    <li>✓ ConfigMaps make configuration management easier and more maintainable</li>
+                    <li>✓ PersistentVolumeClaims ensure data persistence across pod restarts</li>
+                </ul>
+
+                <h2><i class="fas fa-exclamation-triangle"></i> Troubleshooting Tips</h2>
+                
+                <h3>Pod Not Starting</h3>
+                <ul>
+                    <li>Check pod logs: <code>kubectl logs pod/&lt;pod-name&gt; -n kelk</code></li>
+                    <li>Describe pod for events: <code>kubectl describe pod/&lt;pod-name&gt; -n kelk</code></li>
+                    <li>Verify PVC is bound: <code>kubectl get pvc -n kelk</code></li>
+                </ul>
+
+                <h3>Logstash Not Consuming from Kafka</h3>
+                <ul>
+                    <li>Verify Kafka broker is accessible from Logstash pod</li>
+                    <li>Check Logstash logs for connection errors</li>
+                    <li>Ensure the topic name matches in both Kafka and Logstash config</li>
+                </ul>
+
+                <h3>Elasticsearch Connection Failed</h3>
+                <ul>
+                    <li>Verify Elasticsearch is running: <code>kubectl get pods -n kelk</code></li>
+                    <li>Check if port 9200 is accessible</li>
+                    <li>Review Elasticsearch logs for errors</li>
+                </ul>
+
+                <h2><i class="fas fa-rocket"></i> Next Steps</h2>
+                <div class="next-steps-box">
+                    <h3><i class="fas fa-forward"></i> What's Next?</h3>
+                    <ul>
+                        <li>Add Filebeat as a DaemonSet to collect logs from all nodes</li>
+                        <li>Implement Index Lifecycle Management (ILM) in Elasticsearch</li>
+                        <li>Set up alerting rules in Grafana</li>
+                        <li>Configure Kafka replication for high availability</li>
+                        <li>Add authentication and TLS encryption</li>
+                        <li>Implement log filtering and enrichment in Logstash</li>
+                    </ul>
+                </div>
+
+                <h2><i class="fas fa-check-circle"></i> Conclusion</h2>
+                <p>
+                    Congratulations! You've successfully deployed a production-grade Kafka + ELK logging pipeline on 
+                    Kubernetes. This setup provides a scalable, resilient foundation for centralized logging that can 
+                    grow with your application needs.
+                </p>
+                <p>
+                    The architecture we built leverages Kubernetes' orchestration capabilities to ensure high availability, 
+                    automatic recovery, and easy scaling. With StatefulSets for stateful components and ConfigMaps for 
+                    configuration management, we have a maintainable and production-ready logging infrastructure.
+                </p>
+
+                <div class="article-footer">
+                    <div class="author-bio">
+                        <div class="author-avatar">
+                            <img src="../assets/images/me.png" alt="Lahcen Benhaddou">
+                        </div>
+                        <div class="author-info">
+                            <h4>Written by Lahcen Benhaddou</h4>
+                            <p>Software Engineer specializing in backend development, distributed systems, and DevOps</p>
+                        </div>
+                    </div>
+                    
+                    <div class="article-share">
+                        <h4>Share this article</h4>
+                        <div class="share-buttons">
+                            <a href="#" class="share-btn"><i class="fab fa-twitter"></i></a>
+                            <a href="#" class="share-btn"><i class="fab fa-linkedin"></i></a>
+                            <a href="#" class="share-btn"><i class="fab fa-facebook"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </article>
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-info">
+                    <h3>LAHCEN BENHADDOU</h3>
+                    <p>Software Engineer | Backend & Distributed Systems</p>
+                </div>
+                <div class="footer-links">
+                    <a href="https://github.com/Benhaddou-Lahcen" target="_blank" aria-label="GitHub">
+                        <i class="fab fa-github"></i>
+                    </a>
+                    <a href="https://leetcode.com/lahcenbenhaddou" target="_blank" aria-label="LeetCode">
+                        <i class="fas fa-code"></i>
+                    </a>
+                    <a href="https://www.linkedin.com/in/lahcen-benhaddou" target="_blank" aria-label="LinkedIn">
+                        <i class="fab fa-linkedin"></i>
+                    </a>
+                    <a href="mailto:lahcenbenhaddou282@gmail.com" aria-label="Email">
+                        <i class="fas fa-envelope"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Lahcen Benhaddou. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../assets/js/main-clean.js"></script>
+    <script>
+        // Copy code functionality
+        function copyCode(button) {
+            const codeBlock = button.closest('.code-block');
+            const code = codeBlock.querySelector('code').textContent;
+            
+            navigator.clipboard.writeText(code).then(() => {
+                const icon = button.querySelector('i');
+                icon.classList.remove('fa-copy');
+                icon.classList.add('fa-check');
+                button.style.color = '#10b981';
+                
+                setTimeout(() => {
+                    icon.classList.remove('fa-check');
+                    icon.classList.add('fa-copy');
+                    button.style.color = '';
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>

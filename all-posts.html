@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Blog Posts | Lahcen Benhaddou</title>
+    <link rel="stylesheet" href="assets/css/styles-clean.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="animated-bg">
+        <div class="wave wave1"></div>
+        <div class="wave wave2"></div>
+        <div class="wave wave3"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="nav-brand">LAHCEN BENHADDOU</a>
+            <ul class="nav-menu">
+                <li><a href="index.html#home" class="nav-link">Home</a></li>
+                <li><a href="index.html#blog" class="nav-link active">Blog</a></li>
+                <li><a href="index.html#about" class="nav-link">About</a></li>
+                <li><a href="index.html#experience" class="nav-link">Experience</a></li>
+                <li><a href="index.html#projects" class="nav-link">Projects</a></li>
+                <li><a href="index.html#contact" class="nav-link">Contact</a></li>
+            </ul>
+            <div class="nav-actions">
+                <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">
+                    <i class="fas fa-sun"></i>
+                    <i class="fas fa-moon"></i>
+                </button>
+                <div class="hamburger">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Page Header -->
+    <section class="page-header">
+        <div class="container">
+            <a href="index.html#blog" class="back-link">
+                <i class="fas fa-arrow-left"></i> Back to Home
+            </a>
+            <h1 class="page-title">All Blog Posts</h1>
+            <p class="page-subtitle">Technical articles, tutorials, and insights on software engineering</p>
+        </div>
+    </section>
+
+    <!-- All Blog Posts -->
+    <section class="all-posts-section">
+        <div class="container">
+            <div class="posts-grid">
+                <article class="post-card">
+                    <div class="post-image">
+                        <img src="assets/blog-images/demo.png" alt="Kafka ELK">
+                        <span class="post-badge-new">New</span>
+                    </div>
+                    <div class="post-content">
+                        <div class="post-meta">
+                            <span class="post-category"><i class="fas fa-layer-group"></i> DevOps</span>
+                            <span class="post-date"><i class="far fa-calendar"></i> Nov 17, 2025</span>
+                        </div>
+                        <h3>Complete Guide: Jenkins + SonarQube CI/CD Pipeline with GitHub</h3>
+                        <p>A complete guide to setting up a reliable CI/CD pipeline using Jenkins, Docker Compose, and SonarQube. This tutorial....</p>
+                        <div class="blog-tags">
+                            <span class="tag">Jenkins</span>
+                            <span class="tag">SonarQube</span>
+                            <span class="tag">Docker</span>
+                            <span class="tag">CI/CD</span>
+                            <span class="tag">GitHub</span>
+                        </div>
+                        <a href="blog/jenkins.html" class="post-read-link">
+                            Read Article <i class="fas fa-arrow
+-right"></i>
+                        </a>
+                    </div>
+                </article>
+
+                <article class="post-card">
+                    <div class="post-image">
+                        <img src="assets/blog-images/kafka1.png" alt="Microservices">
+                    </div>
+                    <div class="post-content">
+                        <div class="post-meta">
+                            <span class="post-category"><i class="fas fa-cubes"></i> Architecture</span>
+                            <span class="post-date"><i class="far fa-calendar"></i> June 25, 2025</span>
+                        </div>
+                        <h3>Designing a Production-Grade Kafka + ELK Logging Pipeline on Kubernetes</h3>
+                        <p>A scalable KELK architecture that collects, processes, and visualizes logs on Kubernetes using Kafka, Elasticsearch, and Logstash.</p>
+                        <div class="post-tags">
+                    <span class="tag">Kafka</span>
+                    <span class="tag">ELK Stack</span>
+                    <span class="tag">Kubernetes</span>
+                    <span class="tag">Logging</span>
+                    <span class="tag">DevOps</span>
+                </div>
+                        <a href="blog/microservices-best-practices.html" class="post-read-link">
+                            Read Article <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </article>
+
+                <article class="post-card">
+                    <div class="post-image">
+                        <img src="assets/blog-images/mysql.png" alt="Mysql">
+                    </div>
+                    <div class="post-content">
+                        <div class="post-meta">
+                            <span class="post-category"><i class="fas fa-database"></i> Databases</span>
+                            <span class="post-date"><i class="far fa-calendar"></i> Jan 6, 2024</span>
+                        </div>
+                        <h3>MySQL Replication Automation with Shell & Ansible</h3>
+                        <p>A fully automated system that configures MySQL replication (one-way or two-way) through a main Bash script and Ansible-managed SQL tasks, simplifying multi-node deployment and maintenance.</p>
+                        <div class="post-tags">
+    <span class="tag">MySQL</span>
+    <span class="tag">Bash</span>
+    <span class="tag">Ansible</span>
+    <span class="tag">Linux</span>
+    <span class="tag">SSH</span>
+    <span class="tag">Automation</span>
+</div>
+
+                        <a href="blog/redis-optimization.html" class="post-read-link">
+                            Read Article <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </article>
+
+                <article class="post-card">
+                    <div class="post-image">
+                        <img src="https://images.unsplash.com/photo-1544383835-bda2bc66a55d?w=800" alt="PostgreSQL">
+                    </div>
+                    <div class="post-content">
+                        <div class="post-meta">
+                            <span class="post-category"><i class="fas fa-database"></i> Databases</span>
+                            <span class="post-date"><i class="far fa-calendar"></i> Sep 30, 2024</span>
+                        </div>
+                        <h3>PostgreSQL Query Optimization Techniques</h3>
+                        <p>Advanced techniques for improving database query performance at scale.</p>
+                        <div class="post-tags">
+                            <span class="tag">PostgreSQL</span>
+                            <span class="tag">SQL</span>
+                            <span class="tag">Optimization</span>
+                        </div>
+                        <a href="blog/postgresql-optimization.html" class="post-read-link">
+                            Read Article <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-info">
+                    <h3>LAHCEN BENHADDOU</h3>
+                    <p>Software Engineer | Backend & Distributed Systems</p>
+                </div>
+                <div class="footer-links">
+                    <a href="https://github.com/Benhaddou-Lahcen" target="_blank" aria-label="GitHub">
+                        <i class="fab fa-github"></i>
+                    </a>
+                    <a href="https://leetcode.com/lahcenbenhaddou" target="_blank" aria-label="LeetCode">
+                        <i class="fas fa-code"></i>
+                    </a>
+                    <a href="https://www.linkedin.com/in/lahcen-benhaddou" target="_blank" aria-label="LinkedIn">
+                        <i class="fab fa-linkedin"></i>
+                    </a>
+                    <a href="mailto:lahcenbenhaddou282@gmail.com" aria-label="Email">
+                        <i class="fas fa-envelope"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Lahcen Benhaddou. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="assets/js/main-clean.js"></script>
+</body>
+</html>

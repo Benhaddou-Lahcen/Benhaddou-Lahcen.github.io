@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Designing a Production-Grade Kafka + ELK Logging Pipeline on K8s - Lahcen Benhaddou</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Meta tags supplémentaires pour SEO -->
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f7f7f7">
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1b1b1e">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="generator" content="Jekyll v4.4.1" />
+    <meta property="og:title" content="Designing a Production-Grade Kafka + ELK Logging Pipeline on K8s - Part 1" />
+    <meta name="author" content="Lahcen Benhaddou" />
+    <meta property="og:locale" content="en" />
+    <meta name="description" content="Hello everyone!" />
+    <meta property="og:description" content="Hello everyone!" />
+    <link rel="canonical" href="https://lahcen-benhaddou.com/posts/Designing-a-Production-Grade-Kafka-+-ELK-Logging-Pipeline-on-K8s-Part-1/" />
+    <meta property="og:url" content="https://lahcen-benhaddou.com/posts/Designing-a-Production-Grade-Kafka-+-ELK-Logging-Pipeline-on-K8s-Part-1/" />
+    <meta property="og:site_name" content="Lahcen Benhaddou" />
+    <meta property="og:image" content="https://lahcen-benhaddou.com/media/post13/k8s_kelk.png" />
+    <meta property="og:image:alt" content="Designing a Production-Grade Kafka + ELK Logging Pipeline on K8s - Part 1" />
+    <meta property="og:type" content="article" />
+    <meta property="article:published_time" content="2025-10-08T15:00:00+01:00" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta property="twitter:image" content="https://lahcen-benhaddou.com/media/post13/k8s_kelk.png" />
+    <meta name="twitter:image:alt" content="Designing a Production-Grade Kafka + ELK Logging Pipeline on K8s - Part 1" />
+    <meta property="twitter:title" content="Designing a Production-Grade Kafka + ELK Logging Pipeline on K8s - Part 1" />
+    <meta name="twitter:site" content="@LahcenBenhaddou" />
+    <meta name="twitter:creator" content="@Lahcen Benhaddou" />
+
+    <style>
+        .blog-post {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+        .post-header {
+            margin-bottom: 3rem;
+        }
+        .post-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            line-height: 1.3;
+            margin-bottom: 1rem;
+        }
+        .post-meta {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+        .post-content {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: var(--text-primary);
+        }
+        .post-content h2 {
+            font-size: 1.8rem;
+            margin: 2.5rem 0 1rem;
+            color: var(--text-primary);
+        }
+        .post-content h3 {
+            font-size: 1.4rem;
+            margin: 2rem 0 1rem;
+            color: var(--text-primary);
+        }
+        .post-content p {
+            margin-bottom: 1.5rem;
+        }
+        .post-content code {
+            background: var(--bg-secondary);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95rem;
+        }
+        .post-content pre {
+            background: var(--bg-secondary);
+            padding: 1.5rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+        }
+        .post-content ul, .post-content ol {
+            margin: 1rem 0 1.5rem 2rem;
+        }
+        .post-content li {
+            margin-bottom: 0.5rem;
+        }
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--accent-color);
+            text-decoration: none;
+            margin-bottom: 2rem;
+            font-weight: 600;
+        }
+        .back-link:hover {
+            color: var(--secondary-color);
+        }
+        
+        /* Styles pour les blocs de code */
+        .language-shell, .language-yaml, .language-conf {
+            position: relative;
+        }
+        .code-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-tertiary);
+            padding: 0.5rem 1rem;
+            border-radius: 8px 8px 0 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .code-header button {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+        .highlight {
+            border-radius: 0 0 8px 8px;
+            overflow: hidden;
+        }
+        
+        /* Styles pour les images */
+        .img-link {
+            display: block;
+            text-align: center;
+            margin: 2rem 0;
+        }
+        .img-link img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        figcaption {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+        }
+        
+        /* Styles pour les blocs d'information */
+        .prompt-info {
+            background: var(--info-bg);
+            border-left: 4px solid var(--info-color);
+            padding: 1rem 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 0 8px 8px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="blog-post">
+        <a href="../index.html" class="back-link">
+            <i class="fas fa-arrow-left"></i>
+            Retour au blog
+        </a>
+
+        <header class="post-header">
+            <h1 class="post-title">Designing a Production-Grade Kafka + ELK Logging Pipeline on K8s - Part 1</h1>
+            <div class="post-meta">
+                <span>Posté le <time>8 Octobre 2025</time></span>
+                <span>By <em>Lahcen Benhaddou</em></span>
+                <span><em>8 min</em> de lecture</span>
+            </div>
+            
+            <div class="featured-image">
+                <img src="../media/post13/k8s_kelk.png" alt="Designing a Production-Grade Kafka + ELK Logging Pipeline on K8s - Part 1" width="1200" height="630">
+                <figcaption class="text-center pt-2 pb-2">Designing a Production-Grade Kafka + ELK Logging Pipeline on K8s - Part 1</figcaption>
+            </div>
+        </header>
+
+        <div class="post-content">
+            <p>Hello everyone!</p>
+            
+            <p>In my first blog <a href="https://lahcen-benhaddou.com/posts/KELK-Project/">post</a>, I explored how I integrated <strong>Kafka</strong> into the <strong>SIEM (ELK Stack)</strong> to streamline and scale log ingestion. The setup worked well using Docker Compose, allowing me to quickly spin up the ELK Stack and Kafka brokers to demonstrate a reliable log processing pipeline.</p>
+            
+            <p>As the project grew, I began to notice a key limitation of Docker Compose — it doesn't scale efficiently for distributed or <strong>production-grade</strong> workloads. Managing replicas, ensuring high availability, handling node failures, and dynamically scheduling containers all become challenging as the environment expands.</p>
+            
+            <p>This led me to take the next logical step: migrating the entire architecture to <strong>Kubernetes (K8s)</strong>, a powerful container orchestration platform that automates deployment, scaling, and management of containerized applications. Our goal is to deploy a robust log ingestion pipeline inside Kubernetes and integrate various log sources — whether they are network logs, application logs, or logs from monolithic or microservice applications.</p>
+            
+            <p><img src="../media/post13/k8s_kelk.png" alt="objectif" loading="lazy"></p>
+            
+            <p>In this <strong>Part 1 post</strong>, I'll walk you through:</p>
+            <ul>
+                <li>Deploying the different KELK resources on Minikube</li>
+                <li>Validate & Testing the deployment by ingesting messages into Kafka and visualizing them in Grafana</li>
+            </ul>
+            
+            <p>Let's get started!</p>
+            
+            <h2 id="deployment">Deployment</h2>
+            
+            <div class="prompt-info">
+                <p>You need a running k8s control node (I used <strong>minikube</strong> in this blog post)</p>
+            </div>
+            
+            <p>Let's start by creating a namespace:</p>
+            
+            <div class="language-shell">
+                <div class="code-header">
+                    <span data-label-text="Shell"><i class="fas fa-code fa-fw small"></i></span>
+                    <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button>
+                </div>
+                <div class="highlight">
+                    <pre><code>kubectl create namespace kelk</code></pre>
+                </div>
+            </div>
+            
+            <p>Namespaces in Kubernetes help isolate resources logically. By creating a dedicated kelk namespace, we ensure that kelk resources do not interfere with other applications running in the cluster.</p>
+            
+            <h3 id="kafka-deployment">Kafka deployment</h3>
+            
+            <p>In newer versions, Apache Kafka no longer depends on ZooKeeper to manage cluster metadata or handle controller elections. Instead, it introduces a new operating mode called <strong><em>KRaft</em></strong> (Kafka Raft Metadata mode), which allows Kafka to operate <strong>independently of ZooKeeper</strong>, simplifying the architecture.</p>
+            
+            <p><strong>Set Up Kafka Persistent Storage</strong></p>
+            
+            <div class="language-yaml">
+                <div class="code-header">
+                    <span data-label-text="YAML"><i class="fas fa-code fa-fw small"></i></span>
+                    <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button>
+                </div>
+                <div class="highlight">
+                    <pre><code>apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: kafka-pvc
+  namespace: kelk
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi</code></pre>
+                </div>
+            </div>
+            
+            <p>Kafka stores logs and metadata on disk. A <strong>PersistentVolumeClaim (PVC)</strong> ensures that Kafka data persists even if the Pod is restarted, avoiding data loss.</p>
+            
+            <p><strong>Kafka Service</strong></p>
+            
+            <div class="language-yaml">
+                <div class="code-header">
+                    <span data-label-text="YAML"><i class="fas fa-code fa-fw small"></i></span>
+                    <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button>
+                </div>
+                <div class="highlight">
+                    <pre><code>apiVersion: v1
+kind: Service
+metadata:
+  name: kafka-service
+  namespace: kelk
+spec:
+  selector:
+    app: kafka
+  ports:
+    - name: kafka
+      protocol: TCP
+      port: 9092
+      targetPort: 9092
+    - name: controller
+      protocol: TCP
+      port: 9093
+      targetPort: 9093</code></pre>
+                </div>
+            </div>
+            
+            <p>The service is optional for a single-node setup, but it becomes essential in a multi-node cluster for broker-to-broker and client communication.</p>
+            
+            <p><strong>Deploy Kafka as a StatefulSet</strong></p>
+            
+            <div class="language-yaml">
+                <div class="code-header">
+                    <span data-label-text="YAML"><i class="fas fa-code fa-fw small"></i></span>
+                    <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button>
+                </div>
+                <div class="highlight">
+                    <pre><code>apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: kafka
+  namespace: kelk
+spec:
+  serviceName: "kafka-service"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka
+  template:
+    metadata:
+      labels:
+        app: kafka
+    spec:
+      containers:
+        - name: kafka
+          image: apache/kafka:latest
+          ports:
+            - containerPort: 9092
+              name: kafka
+            - containerPort: 9093
+              name: controller
+          volumeMounts:
+            - name: kafka-storage
+              mountPath: /var/lib/kafka/data
+          env:
+            - name: KAFKA_PROCESS_ROLES
+              value: "broker,controller"
+            - name: KAFKA_CONTROLLER_LISTENER_NAMES
+              value: "CONTROLLER"
+            - name: KAFKA_LISTENERS
+              value: "PLAINTEXT://:9092,CONTROLLER://:9093"
+            - name: KAFKA_CONTROLLER_QUORUM_VOTERS
+              value: "1@kafka-0.kafka-service.kelk.svc.cluster.local:9093"
+            - name: KAFKA_NODE_ID
+              value: "1"
+            - name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
+              value: "PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT"
+            - name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
+              value: "1"
+            - name: KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR
+              value: "1"
+            - name: KAFKA_ADVERTISED_LISTENERS
+              value: "PLAINTEXT://kafka-0.kafka-service.kelk.svc.cluster.local:9092"
+            - name: KAFKA_LOG_DIRS
+              value: "/var/lib/kafka/data"
+            - name: KAFKA_INTER_BROKER_LISTENER_NAME
+              value: "PLAINTEXT"
+      volumes:
+        - name: kafka-storage
+          persistentVolumeClaim:
+            claimName: kafka-pvc</code></pre>
+                </div>
+            </div>
+            
+            <p>The YAML config file can be in a single file and apply them with:</p>
+            
+            <div class="language-shell">
+                <div class="code-header">
+                    <span data-label-text="Shell"><i class="fas fa-code fa-fw small"></i></span>
+                    <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button>
+                </div>
+                <div class="highlight">
+                    <pre><code>k apply &lt;file_name&gt;.yaml</code></pre>
+                </div>
+            </div>
+            
+            <h3 id="elasticsearch-deployment">Elasticsearch Deployment</h3>
+            
+            <p>Elasticsearch serves as the database where Logstash writes logs ingested from Kafka topics.</p>
+            
+            <p><strong>Set Up ES Persistent Storage</strong></p>
+            
+            <div class="language-yaml">
+                <div class="code-header">
+                    <span data-label-text="YAML"><i class="fas fa-code fa-fw small"></i></span>
+                    <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button>
+                </div>
+                <div class="highlight">
+                    <pre><code>apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: es-pvc
+  namespace: kelk
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi</code></pre>
+                </div>
+            </div>
+            
+            <p><strong>Set Up ES Service</strong></p>
+            
+            <div class="language-yaml">
+                <div class="code-header">
+                    <span data-label-text="YAML"><i class="fas fa-code fa-fw small"></i></span>
+                    <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button>
+                </div>
+                <div class="highlight">
+                    <pre><code>apiVersion: v1
+kind: Service
+metadata:
+  name: es-service
+  namespace: kelk
+spec:
+  selector:
+    app: es
+  ports:
+    - name: http
+      protocol: TCP
+      port: 9200
+      targetPort: 9200
+    - name: transport
+      protocol: TCP
+      port: 9300
+      targetPort: 9300</code></pre>
+                </div>
+            </div>
+            
+            <p>This service is necessary for Grafana (Kibana) or any other client to access Elasticsearch indexes.</p>
+            
+            <p><strong>Deploy Elasticsearch as a StatefulSet</strong></p>
+            
+            <div class="language-yaml">
+                <div class="code-header">
+                    <span data-label-text="YAML"><i class="fas fa-code fa-fw small"></i></span>
+                    <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button>
+                </div>
+                <div class="highlight">
+                    <pre><code>apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: es
+  namespace: kelk
+spec:
+  serviceName: "es-service"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: es
+  template:
+    metadata:
+      labels:
+        app: es
+    spec:
+      containers:
+        - name: es
+          image: docker.elastic.co/elasticsearch/elasticsearch:8.10.2
+          ports:
+            - containerPort: 9200
+              name: http
+            - containerPort: 9300
+              name: transport
+          volumeMounts:
+            - name: es-storage
+              mountPath: /usr/share/elasticsearch/data
+          env:
+            - name: cluster.name
+              value: "kafka-cluster"
+            - name: bootstrap.memory_lock
+              value: "true"
+            - name: network.host
+              value: "0.0.0.0"
+            - name: discovery.type
+              value: "single-node"
+            - name: xpack.security.enabled
+              value: "false"
+            - name: ES_JAVA_OPTS
+              value: "-Xms512m -Xmx512m"
+      volumes:
+        - name: es-storage
+          persistentVolumeClaim:
+            claimName: es-pvc</code></pre>
+                </div>
+            </div>
+            
+            <h3 id="logstash-deployment">Logstash Deployment</h3>
+            
+            <p>Logstash is a very powerful tool, it has the capability to pull and collect data from a numbered sources, and apply different operation such as filtering or enrichment and then forward the logs to many outputs. For our use case we'll create a pipeline configuration to instruct logstash to read from a specific kafka topic and outputs it to elasticsearch, and for this we'll use k8s ConfigMaps:</p>
+            
+            <p><strong>logstash-kafka.conf :</strong></p>
+            
+            <div class="language-conf">
+                <div class="code-header">
+                    <span data-label-text="Conf"><i class="fas fa-code fa-fw small"></i></span>
+                    <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button>
+                </div>
+                <div class="highlight">
+                    <pre><code>input {
+  kafka {
+    bootstrap_servers => "kafka-0.kafka-service.kelk.svc.cluster.local:9092"
+    topics => ["logs"]
+  }
+}
+
+output {
+  elasticsearch {
+    hosts => ["http://es-0.es-service.kelk.svc.cluster.local:9200"]
+    index => "logs"
+    workers => 1
+  }
+}</code></pre>
+                </div>
+            </div>
+            
+            <p><strong>logstash.yml :</strong></p>
+            
+            <div class="language-yaml">
+                <div class="code-header">
+                    <span data-label-text="YAML"><i class="fas fa-code fa-fw small"></i></span>
+                    <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button>
+                </div>
+                <div class="highlight">
+                    <pre><code>http.host: "0.0.0.0"
+xpack.monitoring.elasticsearch.hosts: [ "http://es-0.es-service.kelk.svc.cluster.local:9200" ]</code></pre>
+                </div>
+            </div>
+            
+            <p><strong>Create ConfigMaps</strong></p>
+            
+            <div class="language-shell">
+                <div class="code-header">
+                    <span data-label-text="Shell"><i class="fas fa-code fa-fw small"></i></span>
+                    <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button>
+                </div>
+                <div class="highlight">
+                    <pre><code>kubectl create configmap logstash-config --from-file=logstash-kafka.conf -n kelk
+kubectl create configmap logstash-yaml --from-file=logstash.yml -n kelk</code></pre>
+                </div>
+            </div>
+            
+            <p><strong>Set Up Logstash Persistent Storage</strong></p>
+            
+            <div class="language-yaml">
+                <div class="code-header">
+                    <span data-label-text="YAML"><i class="fas fa-code fa-fw small"></i></span>
+                    <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button>
+                </div>
+                <div class="highlight">
+                    <pre><code>apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: lgstch-pvc
+  namespace: kelk
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi</code></pre>
+                </div>
+            </div>
+            
+            <p><strong>Deploy Logstash as a StatefulSet</strong></p>
+            
+            <div class="language-yaml">
+                <div class="code-header">
+                    <span data-label-text="YAML"><i class="fas fa-code fa-fw small"></i></span>
+                    <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button>
+                </div>
+                <div class="highlight">
+                    <pre><code>apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: logstash-service
+  namespace: kelk
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: logstash
+  template:
+    metadata:
+      labels:
+        app: logstash
+    spec:
+      containers:
+        - name: logstash
+          image: docker.elastic.co/logstash/logstash:8.10.2
+          volumeMounts:
+            - name: logstash-config-volume
+              mountPath: /usr/share/logstash/pipeline/logstash.conf
+              subPath: logstash-kafka.conf
+            - name: logstash-yaml-volume
+              mountPath: /usr/share/logstash/config/logstash.yml
+              subPath: logstash.yml
+      volumes:
+        - name: logstash-config-volume
+          configMap:
+            name: logstash-config
+        - name: logstash-yaml-volume
+          configMap:
+            name: logstash-yaml</code></pre>
+                </div>
+            </div>
+            
+            <h2 id="deployment-validation">Deployment Validation</h2>
+            
+            <p>Check all resources:</p>
+            
+            <div class="language-shell">
+                <div class="code-header">
+                    <span data-label-text="Shell"><i class="fas fa-code fa-fw small"></i></span>
+                    <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button>
+                </div>
+                <div class="highlight">
+                    <pre><code>$ k get all -n kelk
+NAME                     READY   STATUS    RESTARTS      AGE
+pod/es-0                 1/1     Running   2 (13h ago)   18h
+pod/kafka-0              1/1     Running   2 (13h ago)   20h
+pod/logstash-service-0   1/1     Running   1 (13h ago)   16h
+
+NAME                    TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)             AGE
+service/es-service      ClusterIP   10.107.125.4   &lt;none&gt;        9200/TCP,9300/TCP   18h
+service/kafka-service   ClusterIP   10.101.25.94   &lt;none&gt;        9092/TCP,9093/TCP   21h
+
+NAME                                READY   AGE
+statefulset.apps/es                 1/1     18h
+statefulset.apps/kafka              1/1     20h
+statefulset.apps/logstash-service   1/1     16h</code></pre>
+                </div>
+            </div>
+            
+            <p>Validating ConfigMaps and pvc</p>
+            
+            <div class="language-shell">
+                <div class="code-header">
+                    <span data-label-text="Shell"><i class="fas fa-code fa-fw small"></i></span>
+                    <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button>
+                </div>
+                <div class="highlight">
+                    <pre><code>$ k get pvc -n kelk
+NAME        STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+es-pvc      Bound    pvc-a35c2dba-2236-4128-ad47-9df39596f9a5   5Gi        RWO            standard       &lt;unset&gt;                 18h
+kafka-pvc   Bound    pvc-e85e8b6b-59bc-4d68-bf99-62ef7e8e6ee6   5Gi        RWO            standard       &lt;unset&gt;                 20h</code></pre>
+                </div>
+            </div>
+            
+            <div class="language-shell">
+                <div class="code-header">
+                    <span data-label-text="Shell"><i class="fas fa-code fa-fw small"></i></span>
+                    <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button>
+                </div>
+                <div class="highlight">
+                    <pre><code>$ k get configmap -n kelk
+NAME               DATA   AGE
+kube-root-ca.crt   1      21h
+logstash-config    1      17h
+logstash-yaml      1      16h</code></pre>
+                </div>
+            </div>
+            
+            <h2 id="testing-the-pipeline">Testing the Pipeline</h2>
+            
+            <p>Before starting to ingest and visualize data, let's port forward the es service, this can be done by a simple command or be permanent by changing the service type to <strong>NodePort</strong></p>
+            
+            <h3 id="port-forward-es">Port Forward ES</h3>
+            
+            <div class="language-shell">
+                <div class="code-header">
+                    <span data-label-text="Shell"><i class="fas fa-code fa-fw small"></i></span>
+                    <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button>
+                </div>
+                <div class="highlight">
+                    <pre><code>k port-forward pod/es-0 --address 0.0.0.0 9200:9200 -n kelk</code></pre>
+                </div>
+            </div>
+            
+            <p>Then in Grafana make a new data source connection with your host IP address (localhost will work)</p>
+            
+            <p><img src="../media/post13/grafana.png" alt="grafana" loading="lazy"></p>
+            
+            <h3 id="producing-kafka-messages">Producing kafka messages</h3>
+            
+            <p>First access to the pod:</p>
+            
+            <div class="language-shell">
+                <div class="code-header">
+                    <span data-label-text="Shell"><i class="fas fa-code fa-fw small"></i></span>
+                    <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button>
+                </div>
+                <div class="highlight">
+                    <pre><code>k exec -it pod/kafka-0 -n kelk -- /bin/bash
+
+kafka-0:/$ /opt/kafka/bin/kafka-console-producer.sh --topic logs --bootstrap-server localhost:9092
+&gt;Hi! This is a test           
+&gt;</code></pre>
+                </div>
+            </div>
+            
+            <p>Let's check Grafana if the message was ingested right (go to explore and choose logs):</p>
+            
+            <p><img src="../media/post13/test.png" alt="grafana" loading="lazy"></p>
+            
+            <h2 id="conclusion">Conclusion</h2>
+            
+            <p>You now have a fully functional KELK log ingestion pipeline on k8s using Kafka, Elasticsearch, and Logstash. This setup can be extended for multiple topics, additional log sources, and scaled across nodes when moving from Minikube to a production cluster.</p>
+            
+            <p>Stay tuned for <strong>Part 2</strong>, where we will integrate Filebeat as DaemonSet to collect <strong>pod/container</strong> logs and filtering or enrich our log data.</p>
+        </div>
+
+        <div class="post-footer">
+            <div class="post-tags">
+                <i class="fa fa-tags fa-fw me-1"></i>
+                <a href="#" class="post-tag">kafka</a>
+                <a href="#" class="post-tag">siem</a>
+                <a href="#" class="post-tag">elasticsearch</a>
+                <a href="#" class="post-tag">kibana</a>
+                <a href="#" class="post-tag">logstash</a>
+                <a href="#" class="post-tag">filebeat</a>
+                <a href="#" class="post-tag">docker</a>
+                <a href="#" class="post-tag">log management</a>
+                <a href="#" class="post-tag">cybersecurity</a>
+                <a href="#" class="post-tag">observability</a>
+                <a href="#" class="post-tag">kubernetes</a>
+            </div>
+            
+            <div class="post-categories">
+                <i class="far fa-folder-open fa-fw me-1"></i>
+                <a href="#">kubernetes</a>,
+                <a href="#">log pipeline</a>,
+                <a href="#">elk</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Script basique pour la fonctionnalité de copie de code
+        document.addEventListener('DOMContentLoaded', function() {
+            const copyButtons = document.querySelectorAll('.code-header button');
+            
+            copyButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const codeBlock = this.closest('.language-shell, .language-yaml, .language-conf').querySelector('code');
+                    const textToCopy = codeBlock.textContent;
+                    
+                    navigator.clipboard.writeText(textToCopy).then(() => {
+                        const originalTitle = this.getAttribute('data-title-succeed');
+                        this.innerHTML = '<i class="fas fa-check"></i>';
+                        this.style.color = 'green';
+                        
+                        setTimeout(() => {
+                            this.innerHTML = '<i class="far fa-clipboard"></i>';
+                            this.style.color = '';
+                        }, 2000);
+                    }).catch(err => {
+                        console.error('Erreur lors de la copie: ', err);
+                    });
+                });
+            });
+        });
+    </script>
+</body>
+</html>
